@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
@@ -9,7 +9,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// N'initialiser Firebase que si les clés sont présentes (évite les erreurs au build)
+function getFirebaseApp() {
+  if (!firebaseConfig.apiKey) return null;
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+}
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+const app = getFirebaseApp();
+
+export const db = app ? getFirestore(app) : null as never;
+export const auth = app ? getAuth(app) : null as never;
