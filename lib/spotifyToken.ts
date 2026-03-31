@@ -1,5 +1,9 @@
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
+export function clearCachedToken() {
+  cachedToken = null;
+}
+
 export async function getSpotifyToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
     return cachedToken.value;

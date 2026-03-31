@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSpotifyToken } from "@/lib/spotifyToken";
+import { getSpotifyToken, clearCachedToken } from "@/lib/spotifyToken";
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q");
@@ -11,10 +11,20 @@ export async function GET(request: NextRequest) {
   try {
     const token = await getSpotifyToken();
 
-    const searchRes = await fetch(
+    let searchRes = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
+
+    // Si token expiré, on vide le cache et on réessaie une fois
+    if (searchRes.status === 401) {
+      clearCachedToken();
+      const freshToken = await getSpotifyToken();
+      searchRes = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
+        { headers: { Authorization: `Bearer ${freshToken}` } }
+      );
+    }
 
     if (!searchRes.ok) {
       return NextResponse.json({ error: "Erreur API Spotify" }, { status: 502 });
