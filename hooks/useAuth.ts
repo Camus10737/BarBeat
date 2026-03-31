@@ -14,6 +14,10 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -22,10 +26,12 @@ export function useAuth() {
   }, []);
 
   async function signIn(email: string, password: string) {
+    if (!auth) throw new Error("Firebase non initialisé");
     await signInWithEmailAndPassword(auth, email, password);
   }
 
   async function signOut() {
+    if (!auth) return;
     await firebaseSignOut(auth);
   }
 

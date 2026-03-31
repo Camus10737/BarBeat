@@ -11,7 +11,7 @@ type QRCodeDisplayProps = {
 
 export function QRCodeDisplay({ slug }: QRCodeDisplayProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const url = `https://barbeat.app/bar/${slug}`;
+  const url = `${typeof window !== "undefined" ? window.location.origin : ""}/bar/${slug}`;
 
   function handleDownload() {
     const canvas = canvasRef.current?.querySelector("canvas");
