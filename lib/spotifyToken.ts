@@ -27,6 +27,8 @@ export async function getSpotifyToken(): Promise<string> {
     body: "grant_type=client_credentials",
   });
 
+
+
   if (!response.ok) {
     throw new Error("Échec de l'authentification Spotify");
   }
