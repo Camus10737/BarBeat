@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Venues : lecture publique, écriture DJ authentifié seulement
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Sessions : lecture publique, écriture DJ authentifié seulement
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // QueueItems : lecture publique, ajout public (avec validation), suppression DJ seulement
+    match /queueItems/{itemId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll([
+        'venueId', 'sessionId', 'spotifyTrackId', 'title', 'artist',
+        'coverUrl', 'duration', 'requestedBy', 'requestCount',
+        'status', 'requestedAt'
+      ]) && request.resource.data.status == 'pending';
+      allow update, delete: if request.auth != null;
+    }
+  }
+}
