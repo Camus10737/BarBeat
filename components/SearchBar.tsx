@@ -67,8 +67,9 @@ export function SearchBar({ venueId, sessionId }: SearchBarProps) {
       });
       toast.success("🎵 Ta demande a été envoyée au DJ !");
       setInputValue("");
-    } catch {
-      toast.error("Une erreur est survenue. Réessaie.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg);
     } finally {
       setSubmitting(null);
     }
