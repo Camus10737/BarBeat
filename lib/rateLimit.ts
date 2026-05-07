@@ -7,6 +7,7 @@ type RateLimitResult =
   | { allowed: true }
   | { allowed: false; remainingMs: number };
 
+// Bloque uniquement si le DJ a joué un son de cet utilisateur dans les 5 dernières minutes
 export async function checkRateLimit(
   fingerprint: string,
   venueId: string
@@ -17,7 +18,7 @@ export async function checkRateLimit(
     collection(db, "queueItems"),
     where("requestedBy", "==", fingerprint),
     where("venueId", "==", venueId),
-    where("requestedAt", ">=", fiveMinutesAgo)
+    where("playedAt", ">=", fiveMinutesAgo)
   );
 
   const snapshot = await getDocs(q);
@@ -26,9 +27,8 @@ export async function checkRateLimit(
     return { allowed: true };
   }
 
-  // Trouver la demande la plus récente pour calculer le temps restant
   const mostRecent = snapshot.docs.reduce((latest, doc) => {
-    const t = doc.data().requestedAt as Timestamp;
+    const t = doc.data().playedAt as Timestamp;
     return t.toMillis() > latest ? t.toMillis() : latest;
   }, 0);
 

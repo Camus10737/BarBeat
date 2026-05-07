@@ -3,7 +3,10 @@ export type Venue = {
   name: string;
   slug: string;
   isActive: boolean;
-  djUserId: string;
+  ownerUserId: string;
+  djUserIds: string[];
+  primaryColor: string;
+  logoUrl: string;
   createdAt: unknown;
 };
 
@@ -21,7 +24,7 @@ export type QueueItem = {
   id: string;
   venueId: string;
   sessionId: string;
-  spotifyTrackId: string;
+  itunesTrackId: string;
   title: string;
   artist: string;
   coverUrl: string;
@@ -30,4 +33,8 @@ export type QueueItem = {
   requestCount: number;
   status: QueueItemStatus;
   requestedAt: unknown;
+  playedAt?: unknown;
+  playedBefore?: boolean;
+  likeCount: number;
+  likedBy: string[];
 };

@@ -36,6 +36,13 @@ export function DJQueueList({ venueId, sessionId }: DJQueueListProps) {
       }
       prevCountRef.current = newItems.length;
 
+      // "playing" toujours en premier, puis tri par likes décroissant
+      newItems.sort((a, b) => {
+        if (a.status === "playing") return -1;
+        if (b.status === "playing") return 1;
+        return (b.likeCount ?? 0) - (a.likeCount ?? 0);
+      });
+
       setItems(newItems);
       setLoading(false);
     });

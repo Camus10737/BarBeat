@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import {
-  collection, addDoc, query, where, getDocs,
-  updateDoc, increment, Timestamp,
+  collection, addDoc, query, where, getDocs, Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useSpotifySearch, SpotifyTrack } from "@/hooks/useSpotifySearch";
+import { useItunesSearch, ItunesTrack } from "@/hooks/useItunesSearch";
 import { getFingerprint } from "@/lib/fingerprint";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { Input } from "@/components/ui/input";
@@ -28,9 +27,9 @@ function formatDuration(ms: number) {
 export function SearchBar({ venueId, sessionId }: SearchBarProps) {
   const [inputValue, setInputValue] = useState("");
   const [submitting, setSubmitting] = useState<string | null>(null);
-  const { results, loading, error } = useSpotifySearch(inputValue);
+  const { results, loading, error } = useItunesSearch(inputValue);
 
-  async function handleRequest(track: SpotifyTrack) {
+  async function handleRequest(track: ItunesTrack) {
     setSubmitting(track.id);
     try {
       const fingerprint = await getFingerprint();
@@ -40,22 +39,31 @@ export function SearchBar({ venueId, sessionId }: SearchBarProps) {
         toast.error(`Attends encore ${minutes} minute${minutes > 1 ? "s" : ""} avant de redemander.`);
         return;
       }
+      // Vérifier si le son est déjà en file d'attente (pending)
       const dupSnap = await getDocs(
         query(collection(db, "queueItems"),
           where("venueId", "==", venueId),
           where("sessionId", "==", sessionId),
-          where("spotifyTrackId", "==", track.id),
+          where("itunesTrackId", "==", track.id),
           where("status", "==", "pending"))
       );
       if (!dupSnap.empty) {
-        await updateDoc(dupSnap.docs[0].ref, { requestCount: increment(1) });
-        toast.success("Titre déjà en file — ta demande a été comptée !");
-        setInputValue("");
+        toast.error("Ce titre est déjà dans la file d'attente !");
         return;
       }
+
+      // Vérifier si ce son a déjà été joué ce soir
+      const playedSnap = await getDocs(
+        query(collection(db, "queueItems"),
+          where("venueId", "==", venueId),
+          where("sessionId", "==", sessionId),
+          where("itunesTrackId", "==", track.id),
+          where("status", "==", "played"))
+      );
+
       await addDoc(collection(db, "queueItems"), {
         venueId, sessionId,
-        spotifyTrackId: track.id,
+        itunesTrackId: track.id,
         title: track.title,
         artist: track.artist,
         coverUrl: track.coverUrl,
@@ -64,6 +72,9 @@ export function SearchBar({ venueId, sessionId }: SearchBarProps) {
         requestCount: 1,
         status: "pending",
         requestedAt: Timestamp.now(),
+        playedBefore: !playedSnap.empty,
+        likeCount: 0,
+        likedBy: [],
       });
       toast.success("🎵 Ta demande a été envoyée au DJ !");
       setInputValue("");

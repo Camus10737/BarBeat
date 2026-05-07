@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export type SpotifyTrack = {
+export type ItunesTrack = {
   id: string;
   title: string;
   artist: string;
@@ -10,8 +10,8 @@ export type SpotifyTrack = {
   duration: number;
 };
 
-export function useSpotifySearch(query: string) {
-  const [results, setResults] = useState<SpotifyTrack[]>([]);
+export function useItunesSearch(query: string) {
+  const [results, setResults] = useState<ItunesTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +27,7 @@ export function useSpotifySearch(query: string) {
       setError(null);
 
       try {
-        const res = await fetch(`/api/spotify/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/itunes/search?q=${encodeURIComponent(query)}`);
         const data = await res.json();
 
         if (!res.ok) {

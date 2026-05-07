@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { collection, addDoc, updateDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, getDocs, query, where, writeBatch, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Session } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,18 @@ export function SessionControl({ venueId, session, onSessionChange }: SessionCon
     if (!session) return;
     setLoading(true);
     try {
-      await updateDoc(doc(db, "sessions", session.id), { isActive: false, endedAt: Timestamp.now() });
+      const batch = writeBatch(db);
+
+      // Marquer la session comme terminée
+      batch.update(doc(db, "sessions", session.id), { isActive: false, endedAt: Timestamp.now() });
+
+      // Remettre tous les items "playing" en "played"
+      const playingSnap = await getDocs(
+        query(collection(db, "queueItems"), where("venueId", "==", venueId), where("status", "==", "playing"))
+      );
+      playingSnap.forEach((d) => batch.update(d.ref, { status: "played" }));
+
+      await batch.commit();
       onSessionChange(null);
     } finally {
       setLoading(false);

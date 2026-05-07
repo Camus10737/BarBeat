@@ -10,10 +10,27 @@
       ]
     },
     {
+      "collectionGroup": "queueItems",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "requestedBy", "order": "ASCENDING" },
+        { "fieldPath": "venueId", "order": "ASCENDING" },
+        { "fieldPath": "playedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "sessions",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "venueId", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "venues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "djUserIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "isActive", "order": "ASCENDING" }
       ]
     }

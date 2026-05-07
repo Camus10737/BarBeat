@@ -66,12 +66,22 @@ export default function BarPage({ params }: PageProps) {
     );
   }
 
+  const accentColor = venue.primaryColor || "#6366f1";
+
   return (
-    <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+    <main
+      className="max-w-lg mx-auto px-4 py-6 space-y-6"
+      style={{ "--accent-venue": accentColor } as React.CSSProperties}
+    >
       {/* Header */}
       <div className="text-center py-2">
-        <p className="text-4xl mb-2">🎧</p>
-        <h1 className="text-3xl font-black">{venue.name}</h1>
+        {venue.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={venue.logoUrl} alt={venue.name} className="w-16 h-16 rounded-2xl object-cover mx-auto mb-3" />
+        ) : (
+          <p className="text-4xl mb-2">🎧</p>
+        )}
+        <h1 className="text-3xl font-black" style={{ color: accentColor }}>{venue.name}</h1>
         <p className="text-base text-muted-foreground mt-1">Demande ta musique au DJ</p>
       </div>
 

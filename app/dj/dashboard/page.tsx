@@ -24,7 +24,7 @@ export default function DJDashboardPage() {
     if (!user) return;
     async function load() {
       const venueSnap = await getDocs(
-        query(collection(db, "venues"), where("djUserId", "==", user!.uid), limit(1))
+        query(collection(db, "venues"), where("djUserIds", "array-contains", user!.uid), limit(1))
       );
       const snap = venueSnap.empty
         ? await getDocs(query(collection(db, "venues"), limit(1)))

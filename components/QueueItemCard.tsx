@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { doc, updateDoc, getDocs, collection, query, where } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import { doc, updateDoc, getDocs, collection, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QueueItem } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,21 @@ export function QueueItemCard({ item, venueId }: QueueItemCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isPlaying = item.status === "playing";
 
+  // Marquer automatiquement comme joué quand la durée est écoulée
+  useEffect(() => {
+    if (!isPlaying || !item.playedAt || !item.duration) return;
+    const playedAtMs = (item.playedAt as Timestamp).toMillis();
+    const remaining = playedAtMs + item.duration - Date.now();
+    if (remaining <= 0) {
+      updateDoc(doc(db, "queueItems", item.id), { status: "played" });
+      return;
+    }
+    const timer = setTimeout(() => {
+      updateDoc(doc(db, "queueItems", item.id), { status: "played" });
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [isPlaying, item.playedAt, item.duration, item.id]);
+
   async function handlePlay() {
     setLoading("play");
     try {
@@ -39,7 +54,7 @@ export function QueueItemCard({ item, venueId }: QueueItemCardProps) {
         query(collection(db, "queueItems"), where("venueId", "==", venueId), where("status", "==", "playing"))
       );
       for (const d of playingSnap.docs) await updateDoc(d.ref, { status: "played" });
-      await updateDoc(doc(db, "queueItems", item.id), { status: "playing" });
+      await updateDoc(doc(db, "queueItems", item.id), { status: "playing", playedAt: Timestamp.now() });
     } finally { setLoading(null); }
   }
 
@@ -67,7 +82,8 @@ export function QueueItemCard({ item, venueId }: QueueItemCardProps) {
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               {isPlaying && <Badge className="text-sm px-2 py-0.5">🎵 En cours</Badge>}
-              {item.requestCount > 1 && <Badge variant="secondary" className="text-sm px-2 py-0.5">🔥 x{item.requestCount}</Badge>}
+              {item.playedBefore && <Badge variant="destructive" className="text-sm px-2 py-0.5">⚠️ Déjà joué ce soir</Badge>}
+              {(item.likeCount ?? 0) > 0 && <Badge variant="secondary" className="text-sm px-2 py-0.5">❤️ {item.likeCount}</Badge>}
             </div>
             <p className="text-lg font-bold truncate">{item.title}</p>
             <p className="text-base text-muted-foreground truncate">{item.artist}</p>
